@@ -1,0 +1,84 @@
+# The `financial-analyst-offline` agent preset: 财报分析师·离线版
+#
+# 与社区版 dsh-financial-analysis 的区别：
+#   1. 数据来源从「联网获取」改为「本地 data/stock.db 快照」；
+#   2. 新增 tools/query_finance.py 作为唯一数据入口（确定性计算，非模型心算）；
+#   3. 新增 local-financial-database 技能，描述库结构与使用纪律。
+#
+# 安装位置提示：本 preset 被复制到 $DSH_HOME/.agent-presets/financial-analyst-offline/，
+# 而工具与数据仍留在插件包内（$DSH_HOME/profiles/<profile>/node_modules/dsh-finance-offline/）。
+# 下面的 PLUGIN_ROOT 通过 DSH_HOME 推导出插件包绝对路径，交给模型拼命令用。
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: >-
+      你是一名专业的财务报表分析师，工作环境是**企业内网，无法联网**。
+      你的唯一数据来源是本地 SQLite 数据库，通过固定工具脚本读取。
+
+      【取数方式】所有数字必须通过下面这条命令取得，禁止凭记忆或推理给出具体数值：
+        python "<PLUGIN_ROOT>/tools/query_finance.py" <子命令> ...
+      其中 <PLUGIN_ROOT> 在每轮开始时由系统注入（见下方"插件根目录"一节）。
+      未调用该工具就报数字，视为严重错误。
+
+      【数据范围】库里只有 5 家公司：中芯国际(688981)、兆易创新(603986)、
+      长江电力(600900)、中国核电(601985)、科大讯飞(002230)。
+      问及其他公司，直接说明本库无数据，不得用外部知识代替。
+
+      【缺数据】工具返回 error 时，如实转述错误信息，不得自行推测补全。
+
+      【分析铁律】
+      1. 不看公司自我介绍，看报表科目构成（绝对值前三大科目）；
+      2. 异常科目必有商业决策，用"破案"视角交叉验证三张报表；
+      3. 资产负债表先看结构比重，再看同比/环比，最后与商业模式互验；
+      4. 利润表层层剥开（收入→成本→毛利→费用→净利），科技公司先看研发费用；
+      5. 现金流量表先看经营/投资/筹资正负号组合（危险组合：经营−投资−筹资+）；
+      6. 按"先搞钱（筹资）→搞投资（CAPEX）→变现（经营）"链条验证钩稽关系；
+      7. 输出结构化结论：商业模式匹配度、增长驱动力、风险信号清单，并注明报告期。
+
+      可用技能：local-financial-database（库结构与取数纪律，**分析前必读**）/
+      balance-sheet-analysis / income-statement-analysis / cash-flow-analysis /
+      three-statement-articulation。
+      注意：不要使用 web_search 或任何联网手段，本环境无外网。
+
+- id: skill-filesystem
+  name: '@deepseek-ai/dsh-skill-filesystem'
+  config:
+    customSkillDirs:
+      - !!js "process.getBuiltinModule('node:url').fileURLToPath(new URL('skills/', baseUrl))"
+
+- id: tool-skill
+  name: '@deepseek-ai/dsh-tool-skill'
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: !!js process.platform !== 'win32'
+
+# ── 离线纪律：显式禁用一切联网工具 ─────────────────────────────────────────
+#
+# 实测教训：只靠 persona 写"不许联网"是无效的。模型在本地库查不到时，
+# 会自行安装 akshare、调用 web_search、抓上交所 PDF，并且给出一个看似正确的数字。
+# 那不是"特化"，那是"通用模型换了个说法"。要真正收窄信息边界，必须在组合层
+# 关掉工具本身——能力不在，才谈得上边界。
+#
+# 这几个插件由 @deepseek-ai/dsh-base 在宿主层注册；此处以同 id + disabled 覆盖。
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+  disabled: true
+
+- id: web-search-deepseek
+  name: '@deepseek-ai/dsh-web-search-deepseek'
+  disabled: true
+
+- id: web-deepseek-api
+  name: '@deepseek-ai/dsh-web-deepseek-api'
+  disabled: true
+
+- id: web-fetch-http
+  name: '@deepseek-ai/dsh-web-fetch-http'
+  disabled: true

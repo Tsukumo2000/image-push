@@ -1,0 +1,14 @@
+# dsh-finance-offline bundle patch
+#
+# 本插件是 dsh-financial-analysis 的离线改造版。能力载体为随包分发的
+# 「财报分析师·离线版」Agent preset：
+#   config/agent-presets/financial-analyst/
+#     preset.yml          —— 预设元数据
+#     agent.cordis.yml    —— persona + skill-filesystem（挂载包内 skills/）+ 本地 shell 工具
+#     skills/<技能>/SKILL.md —— 分析规则 + local-financial-database（库结构说明）
+#   data/stock.db         —— 本地财务数据库（5只A股，行情+三表）
+#   tools/query_finance.py—— 唯一取数入口（确定性查询与指标计算）
+#
+# 安装后，在 Web 界面新建会话时选择「财报分析师·离线版」preset 即可获得全部能力。
+# 本 patch 保持最小化，仅作为 bundle 装配标记。
+[]

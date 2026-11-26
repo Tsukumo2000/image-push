@@ -1,0 +1,36 @@
+{
+  "name": "dsh-finance-offline",
+  "description": "DeepSeek Harness 财报分析插件（离线版）：基于本地 SQLite 财务数据库（5只A股，覆盖半导体/电力/AI）的「财报分析师」Agent preset，含本地取数工具 tools/query_finance.py。适用于无外网环境，所有数字确定性来自本地库。",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "cordis.patch.yml",
+    "config/agent-presets/financial-analyst/preset.yml",
+    "config/agent-presets/financial-analyst/agent.cordis.yml",
+    "config/agent-presets/financial-analyst/skills/**/*",
+    "data/stock.db",
+    "tools/query_finance.py",
+    "report/**/*",
+    "README.md",
+    "README.original.md",
+    "scripts/postinstall.js"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "plugin",
+    "financial-analysis",
+    "offline",
+    "财务报表",
+    "离线"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  }
+}
